@@ -47,9 +47,9 @@ def plot_words(keys, values, title="Word Frequency", path="./img/WordFreq_.jpg")
     ax.bar(keys, values, align='center');
     plt.xticks(rotation=90);
     # Giving the tilte for the plot
-    ax.set_title(title, fontsize=35)
-    ax.set_xlabel('Words', fontsize=25)
-    ax.set_ylabel('Relative Frequency', fontsize=25)
+    ax.set_title(title, fontsize=30)
+    ax.set_xlabel('Words', fontsize=20)
+    ax.set_ylabel('Rel. Freq.', fontsize=20)
     fig.savefig(path)
     plt.show()
     return fig, ax
@@ -106,12 +106,23 @@ if __name__ == "__main__":
     stopwords2 = set(stopwords.words('english')).union(stopwords_)
 
     string = '''
-    Read Data, Verify Input
+    Read Data, Clean/Verify Input
     '''
     print(string)
-    df=pd.read_csv("../data/cleaned1.csv", compression="gzip")
+    df = pd.read_csv("../data/cleaned1.csv", compression="gzip")
+    df["search_query"] = df["Serach Query"]
+    df.drop(columns=["Likelihood","Is2020","Duration", "Day", "Hour of Day","Search Query"],
+        inplace=True)
+    df['dt'] = df['dt'].apply(pd.to_datetime)
+    df['year'] = pd.DatetimeIndex(df['dt']).year
+    df['month'] = pd.DatetimeIndex(df['dt']).month
+    #df['month_name'] = pd.DatetimeIndex(df['dt']).month_name
+    df['day'] = pd.DatetimeIndex(df['dt']).day_of_week
+    #df['day_of_week'] = pd.DatetimeIndex(df['dt']).day_name
+    df['hour'] = pd.DatetimeIndex(df['dt']).hour
+
     print(df.info())    
-    df["Page"].fillna(" ", inplace=True)
+    df["Page", "Search_Query"].fillna(" ", inplace=True)
 
     string = '''
     Generate URL data from URL Class
@@ -134,12 +145,12 @@ if __name__ == "__main__":
     print(string)
     index = df["New_Lead"]=="NewLead"
     index2 = df["New_Lead"]!="NewLead"
-    vectorizer_extendedNL = CountVectorizer(analyzer="word", max_features = max_features_base, 
+    vectorizer_extendedNL = CountVectorizer(analyzer="word", max_features = max_features_extended, 
         stop_words=stopwords2, ngram_range=(1,3))
     X_extendedNL = vectorizer_extendedNL.fit_transform(url1Data.loc[index, "extended_url"]).toarray()
     wc1, wf1 = count_words(vectorizer_extendedNL, X_extendedNL)
 
-    vectorizer_extendedNNL = CountVectorizer(analyzer="word", max_features = max_features_base, 
+    vectorizer_extendedNNL = CountVectorizer(analyzer="word", max_features = max_features_extended, 
         stop_words=stopwords2, ngram_range=(1,3))
     X_extendedNNL = vectorizer_extendedNNL.fit_transform(url1Data.loc[index2, "extended_url"]).toarray()
     wc2, wf2 = count_words(vectorizer_extendedNNL, X_extendedNNL)
@@ -149,7 +160,7 @@ if __name__ == "__main__":
         path = "../img/WordFreqLPExtURLNNL.jpg")
 
     string = '''
-    Get Dominant Features for Data Frame, no index.
+    Get Dominant Features for Data Frame.
     First set Vectorizer
     Then Set BOW
     Then Count_words()
@@ -164,3 +175,43 @@ if __name__ == "__main__":
     df = pd.concat([df, df_ex.loc[:,wfex[:10].index]], axis=1)
     print(df)
     print(df.info())
+
+
+    string = '''
+    Get BOW & Word Counts (wc) for 
+    Base URL
+    '''
+    print(string)
+    vectorizer_baseNL = CountVectorizer(analyzer="word", max_features = max_features_base, 
+        stop_words=stopwords2, ngram_range=(1,1))
+    X_baseNL = vectorizer_baseNL.fit_transform(url1Data.loc[index, "base_url"]).toarray()
+    wc1, wf1 = count_words(vectorizer_baseNL, X_baseNL)
+
+    vectorizer_baseNNL = CountVectorizer(analyzer="word", max_features = max_features_base, 
+        stop_words=stopwords2, ngram_range=(1,1))
+    X_baseNNL = vectorizer_baseNNL.fit_transform(url1Data.loc[index2, "base_url"]).toarray()
+    wc2, wf2 = count_words(vectorizer_baseNNL, X_baseNNL)
+    plot_words(wf1.index[:30], wf1[:30], title="Word Frequency-Landing Page-Base URL-New Leads", 
+        path = "../img/WordFreqLPBaeURLNL.jpg")
+    plot_words(wf2.index[:30], wf2[:30], title="Word Frequency-Landing Page-Base URL-Non Leads", 
+        path = "../img/WordFreqLPBaseURLNNL.jpg")
+    
+    string = '''
+    Get Dominant Features for base URL Data Frame.
+    First set Vectorizer
+    Then Set BOW
+    Then Count_words()
+    then set DF
+    '''
+    print(string)
+    vectorizer_base = CountVectorizer(analyzer="word", max_features= max_features_extended,
+        stop_words=stopwords2, ngram_range=(1,1))
+    X_base = vectorizer_base.fit_transform(url1Data["base_url"]).toarray()
+    wcbase, wfbase = count_words(vectorizer_base, X_base)
+    df_base = pd.DataFrame(data=X_base, columns=vectorizer_base.get_feature_names())
+    df = pd.concat([df, df_base.loc[:,wfbase[:10].index]], axis=1)
+    print(df)
+    print(df.info())
+
+    
+    
