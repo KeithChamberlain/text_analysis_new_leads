@@ -138,6 +138,7 @@ if __name__ == "__main__":
         stop_words=stopwords2, ngram_range=(1,3))
     X_extendedNL = vectorizer_extendedNL.fit_transform(url1Data.loc[index, "extended_url"]).toarray()
     wc1, wf1 = count_words(vectorizer_extendedNL, X_extendedNL)
+
     vectorizer_extendedNNL = CountVectorizer(analyzer="word", max_features = max_features_base, 
         stop_words=stopwords2, ngram_range=(1,3))
     X_extendedNNL = vectorizer_extendedNNL.fit_transform(url1Data.loc[index2, "extended_url"]).toarray()
@@ -146,8 +147,20 @@ if __name__ == "__main__":
         path = "../img/WordFreqLPExtURLNL.jpg")
     plot_words(wf2.index[:30], wf2[:30], title="Word Frequency-Landing Page-Extended URL-Non Leads", 
         path = "../img/WordFreqLPExtURLNNL.jpg")
-    
 
     string = '''
-
+    Get Dominant Features for Data Frame, no index.
+    First set Vectorizer
+    Then Set BOW
+    Then Count_words()
+    then set DF
     '''
+    print(string)
+    vectorizer_ex = CountVectorizer(analyzer="word", max_features= max_features_extended,
+        stop_words=stopwords2, ngram_range=(1,3))
+    X_extended = vectorizer_ex.fit_transform(url1Data["extended_url"]).toarray()
+    wcex, wfex = count_words(vectorizer_ex, X_extended)
+    df_ex = pd.DataFrame(data=X_extended, columns=vectorizer_ex.get_feature_names())
+    df = pd.concat([df, df_ex.loc[:,wfex[:10].index]], axis=1)
+    print(df)
+    print(df.info())
