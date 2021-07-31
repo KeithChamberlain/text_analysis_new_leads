@@ -263,4 +263,4 @@ if __name__ == "__main__":
     print(df.info())
     if save:
         df.to_csv("../data/cleaned1.csv", index=False, compression="gzip")
-        df.to_excel("../data/cleaned1.xlsx", sheet_name="cleaned1")
+        #df.to_excel("../data/cleaned1.xlsx", sheet_name="cleaned1")

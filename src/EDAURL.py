@@ -16,11 +16,9 @@ from joblib import dump, load
 def count_words(vectorizer, corpus):
     '''
     count_words: Counts the words fit by CountVectorizer and returns a 
-    Series with the relative frequencies. 
-    
+    Series with the relative frequencies.     
     vectorizer - vectorizer object called just before fitting.
     corpus - the bag of words
-    
     returns - wc2 a Series with the words and freq each word
     '''
     word_list=vectorizer.get_feature_names()
@@ -38,13 +36,9 @@ def plot_words(keys, values, title="Word Frequency", path="./img/WordFreq_.jpg")
     '''
     plot_words takes the names and values from a words/count Series, a custom title,
     a custom path, and plots the word frequencies, saving the image.
-    
     keys: the words
-    
     values: the counts
-    
     title: a title for the plot
-    
     path: a path/filename to save the resulting image to disk
 
     returns: fig, ax tuple for later adjustments
@@ -63,15 +57,10 @@ def plot_words(keys, values, title="Word Frequency", path="./img/WordFreq_.jpg")
 def fit_nmf(X, n_words, init = 'random', max_iter=200):
     '''
     fit_nmf fits an NMF object with a-priori n_words to fit
-    
     X: a bag of words to fit
-    
     n_words: how many max words to fit from
-
-    init: initialization parameter; defaults to 'random'.
-
+    init: initialization parameter; defaults to 'random'
     max_iter, same as NMF(max_iter), defaults to 200.
-    
     returns nmf.reconstruction_err_, W, H matrices
     '''
     nmf = NMF(n_components=n_words, init = init, max_iter=max_iter)
@@ -85,11 +74,8 @@ def plot_score(score, words):
     '''
     plot_score given scores, and related words that were
     scored, plot the results.
-    
     score: usually, nmf.reconstruction_err_ results.
-    
     words: associated words that were scored. The H matrix
-    
     returns fig, ax for additional adjustments
     '''
     fig, ax= plt.subplots(figsize=(16,5))
@@ -161,7 +147,7 @@ if __name__ == "__main__":
     plot_words(wf2.index[:30], wf2[:30], title="Word Frequency-Landing Page-Extended URL-Non Leads", 
         path = "../img/WordFreqLPExtURLNNL.jpg")
     
-    
+
     string = '''
 
     '''
