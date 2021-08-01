@@ -2,6 +2,11 @@ import numpy as np
 
 class MineURL:
     def __init__(self, full_url):
+        '''
+        Initializes the MineURL class. Given a full URL, the URL 
+        is decomposed into the components: base URL, extended text
+        and search string, upon assignment.
+        '''
         url_dictionary = dict()
         self.url_dictionary = url_dictionary
         self.url_dictionary['full_url'] = full_url if not full_url in ["", np.nan] else np.nan
@@ -15,6 +20,10 @@ class MineURL:
     
     
     def check_url(self, url):
+        ''' 
+        check_url checks to see if the URL is a string
+        and returns True, else False.
+        '''
         if type(url) != str:
             return False
         else:
@@ -41,6 +50,11 @@ class MineURL:
 
 
     def find_base_protocol(self):
+        '''
+        find_base_protocol finds the portion of the URL that 
+        contains the base protocol. Returns the first 
+        instance of the protocol.
+        '''
         url = self.url_dictionary["full_url"]
         if self.check_url(url):
             for key, lst in self.url_dictionary["protocols"].items():
@@ -52,6 +66,11 @@ class MineURL:
 
 
     def get_protocols(self, protocol_list=["https", "http", "ftp"]):
+        '''
+        get_protocols gets a list of protocols present in the URL
+        protocol_list: a list of protocols to check for.
+        return: the list of protocols or np.nan
+        '''
         url = self.url_dictionary["full_url"]
         if self.check_url(url):
             protocols = dict()
@@ -74,6 +93,10 @@ class MineURL:
 
 
     def get_element(self, element = {"forward_slash": ["/"]}):
+        '''
+        get_element gets the specified element in 
+        the search dictionary and returns the location.
+        '''
         url = self.url_dictionary["full_url"]
         if self.check_url(url):
             item = list(element.values())[0][0]
@@ -88,6 +111,10 @@ class MineURL:
 
 
     def get_base_url(self, protocol = "https"):
+        '''
+        get_bae_url gets the base URL from the right side
+        of the protocol to the (possibly) first forward slash
+        '''
         full_url = self.url_dictionary["full_url"]
         if self.check_url(full_url):
             if type(protocol) == str:
@@ -110,6 +137,12 @@ class MineURL:
     def clean_substring(self, obj, 
         delimiters = ["%20", "%2f", "%27", "+", "-", "_", "//", "/", "https","http","ftp","%3a", ":", ";", ".", "q=", "=", "?"],
         replacement = [" ", " ", "", " ", " ", " ", " ", " ", "","","",""," "," "," "," "," ", " "]):
+        '''
+        clean_substring performs some cleaning of the 
+        string. This is used for non base_url portions of the 
+        URL. 
+        given delimiters, replace the appropriate value. 
+        '''
         if self.check_url(obj):
             for string, replace in zip(delimiters, replacement):
                 if ((type(obj) != str) or (type(string) != str) or (type(replace) != str)):
@@ -124,6 +157,9 @@ class MineURL:
 
     def get_search_string(self, 
         tokens = {"keys": ["search?","maps?","serp?", "RU"], "start_token":"q=", "stop_token":"&"}):
+        '''
+        get_search_string searches the URL for the appriate substring
+        '''
         url = self.url_dictionary["full_url"]
         if self.check_url(url):
             for key in tokens["keys"]:
@@ -142,6 +178,10 @@ class MineURL:
 
 
     def get_extended_url(self):
+        '''
+        get_extended_url returns the extended URL from the URL if
+        it exists, and np.nan otherwise. 
+        '''
         url = self.url_dictionary['full_url']
         if self.check_url(url):
             uncleaned_search_string = self.get_search_string()
@@ -171,6 +211,10 @@ class MineURL:
 
 
     def get_record(self, full_url):
+        '''
+        get_record returns the cleaned record containing
+        the base URL, extended text, and the search string, or NAN otherwise.
+        '''
         record = [self.url_dictionary["base_url"], self.url_dictionary["extended_text"], 
                     self.url_dictionary["search_string"]]
         if full_url:
@@ -179,6 +223,9 @@ class MineURL:
 
 
 class ManyURL:
+    '''
+    class ManyURL deals with the actions associated with many urls at a time.
+    '''
     def __init__(self, series):
         ranger = range(len(series))
         n_MineURL = 0
@@ -198,6 +245,10 @@ class ManyURL:
         print(string)
 
     def get_records(self, full_text=False):
+        '''
+        get_records is the MineURL get_record equivalent for many records.
+        It returns all records in the catalog. 
+        '''
         self.full_text = full_text
         lst = list()
         n_nan_read = 0

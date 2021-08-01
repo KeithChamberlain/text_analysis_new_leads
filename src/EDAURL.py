@@ -1,17 +1,14 @@
 import numpy as np
 import pandas as pd
-import re
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
-from MineURL import MineURL, ManyURL
+from MineURL import ManyURL
 from makedv import get_search
-from scipy import stats
 from sklearn.feature_extraction.text import CountVectorizer
-from math import isclose
 from nltk.corpus import stopwords
 from sklearn.decomposition import NMF
-from joblib import dump, load
+
 
 def count_words(vectorizer, corpus):
     '''
@@ -87,7 +84,8 @@ if __name__ == "__main__":
     max_features_base=500
     max_features_extended=500
     max_features_search=500
-    
+    n_features_to_df = 10
+    n_features_to_graph = 30
     string = '''
     Custom Stop Words
     '''
@@ -102,7 +100,7 @@ if __name__ == "__main__":
         'pi','pch','qa','s0', 'na104', 'na27', 'na31', 'na74', 'na8', 'na93', 'mc','lu','lv','kr',
         'kh','gy','hq', 'hr', 'ht', 'hu','hk', 'hn','zw', '152', '155', '172', '193', '23', '232', 
         '24','ws', 'www1', 'www4', 'wxyz','xyz','ib','jm', 'jo', 'jp', 'fm', 'en','dp','du','ec','99',
-        '64','gclid','bwc','campaign','ad','fba','utm','fbclid','wcb','tsr','bwe'})
+        '64','gclid','bwc','campaign','ad','fba','utm','fbclid','wcb','tsr','bwe','near','provided'})
     stopwords2 = set(stopwords.words('english')).union(stopwords_)
 
     string = '''
@@ -110,8 +108,10 @@ if __name__ == "__main__":
     '''
     print(string)
     df = pd.read_csv("../data/cleaned1.csv", compression="gzip")
-    df["search_query"] = df["Serach Query"]
-    df.drop(columns=["Likelihood","Is2020","Duration", "Day", "Hour of Day","Search Query"],
+    df["search_query"] = df["Search Query"]
+    df["tracking_source"] = df["Tracking Source"]
+    df.drop(columns=["Likelihood","Is2020","Duration", "Day", "Hour of Day","Search Query", 
+        "Tracking Source", "dur_min"],
         inplace=True)
     df['dt'] = df['dt'].apply(pd.to_datetime)
     df['year'] = pd.DatetimeIndex(df['dt']).year
@@ -121,9 +121,14 @@ if __name__ == "__main__":
     #df['day_of_week'] = pd.DatetimeIndex(df['dt']).day_name
     df['hour'] = pd.DatetimeIndex(df['dt']).hour
 
+    # Fill NAs
     print(df.info())    
-    df["Page", "Search_Query"].fillna(" ", inplace=True)
+    df["Page"] = df.loc[:,"Page"].fillna(" ").copy()
+    print("Search Query Not NA: ", df["search_query"].notna().count())
+    df["search_query"] = df.loc[:,"search_query"].fillna(" ").copy()
 
+    print(df["tracking_source"].value_counts())
+    
     string = '''
     Generate URL data from URL Class
     '''
@@ -145,18 +150,24 @@ if __name__ == "__main__":
     print(string)
     index = df["New_Lead"]=="NewLead"
     index2 = df["New_Lead"]!="NewLead"
-    vectorizer_extendedNL = CountVectorizer(analyzer="word", max_features = max_features_extended, 
+    vectorizer_extendedNL = CountVectorizer(analyzer="word", 
+        max_features = max_features_extended,
         stop_words=stopwords2, ngram_range=(1,3))
-    X_extendedNL = vectorizer_extendedNL.fit_transform(url1Data.loc[index, "extended_url"]).toarray()
+    X_extendedNL = vectorizer_extendedNL.fit_transform(url1Data.loc[index, 
+        "extended_url"]).toarray()
     wc1, wf1 = count_words(vectorizer_extendedNL, X_extendedNL)
 
-    vectorizer_extendedNNL = CountVectorizer(analyzer="word", max_features = max_features_extended, 
+    vectorizer_extendedNNL = CountVectorizer(analyzer="word", 
+        max_features = max_features_extended, 
         stop_words=stopwords2, ngram_range=(1,3))
-    X_extendedNNL = vectorizer_extendedNNL.fit_transform(url1Data.loc[index2, "extended_url"]).toarray()
+    X_extendedNNL = vectorizer_extendedNNL.fit_transform(url1Data.loc[index2, 
+        "extended_url"]).toarray()
     wc2, wf2 = count_words(vectorizer_extendedNNL, X_extendedNNL)
-    plot_words(wf1.index[:30], wf1[:30], title="Word Frequency-Landing Page-Extended URL-New Leads", 
+    plot_words(wf1.index[:n_features_to_graph], wf1[:n_features_to_graph], 
+        title="Word Frequency-Landing Page-Extended URL-New Leads", 
         path = "../img/WordFreqLPExtURLNL.jpg")
-    plot_words(wf2.index[:30], wf2[:30], title="Word Frequency-Landing Page-Extended URL-Non Leads", 
+    plot_words(wf2.index[:n_features_to_graph], wf2[:n_features_to_graph], 
+        title="Word Frequency-Landing Page-Extended URL-Non Leads", 
         path = "../img/WordFreqLPExtURLNNL.jpg")
 
     string = '''
@@ -167,12 +178,15 @@ if __name__ == "__main__":
     then set DF
     '''
     print(string)
-    vectorizer_ex = CountVectorizer(analyzer="word", max_features= max_features_extended,
+    vectorizer_ex = CountVectorizer(analyzer="word", 
+        max_features= max_features_extended,
         stop_words=stopwords2, ngram_range=(1,3))
     X_extended = vectorizer_ex.fit_transform(url1Data["extended_url"]).toarray()
     wcex, wfex = count_words(vectorizer_ex, X_extended)
+
+    wcindex= np.sum(wcex > 1000)
     df_ex = pd.DataFrame(data=X_extended, columns=vectorizer_ex.get_feature_names())
-    df = pd.concat([df, df_ex.loc[:,wfex[:10].index]], axis=1)
+    df = pd.concat([df, df_ex.loc[:,wcex[:wcindex].index]], axis=1)
     print(df)
     print(df.info())
 
@@ -182,20 +196,56 @@ if __name__ == "__main__":
     Base URL
     '''
     print(string)
-    vectorizer_baseNL = CountVectorizer(analyzer="word", max_features = max_features_base, 
+    vectorizer_baseNL = CountVectorizer(analyzer="word", 
+        max_features = max_features_base, 
         stop_words=stopwords2, ngram_range=(1,1))
-    X_baseNL = vectorizer_baseNL.fit_transform(url1Data.loc[index, "base_url"]).toarray()
+    X_baseNL = vectorizer_baseNL.fit_transform(url1Data.loc[index, 
+        "base_url"]).toarray()
     wc1, wf1 = count_words(vectorizer_baseNL, X_baseNL)
 
-    vectorizer_baseNNL = CountVectorizer(analyzer="word", max_features = max_features_base, 
+    vectorizer_baseNNL = CountVectorizer(analyzer="word", 
+        max_features = max_features_base, 
         stop_words=stopwords2, ngram_range=(1,1))
-    X_baseNNL = vectorizer_baseNNL.fit_transform(url1Data.loc[index2, "base_url"]).toarray()
+    X_baseNNL = vectorizer_baseNNL.fit_transform(url1Data.loc[index2, 
+        "base_url"]).toarray()
     wc2, wf2 = count_words(vectorizer_baseNNL, X_baseNNL)
-    plot_words(wf1.index[:30], wf1[:30], title="Word Frequency-Landing Page-Base URL-New Leads", 
+    
+    plot_words(wf1.index[:n_features_to_graph], wf1[:n_features_to_graph], 
+        title="Word Frequency-Landing Page-Base URL-New Leads", 
         path = "../img/WordFreqLPBaeURLNL.jpg")
-    plot_words(wf2.index[:30], wf2[:30], title="Word Frequency-Landing Page-Base URL-Non Leads", 
+    plot_words(wf2.index[:n_features_to_graph], wf2[:n_features_to_graph], 
+        title="Word Frequency-Landing Page-Base URL-Non Leads", 
         path = "../img/WordFreqLPBaseURLNNL.jpg")
     
+    
+    string = '''
+    Get BOW & Word Counts (wc) for 
+    Search String
+    '''
+    print(string)
+    vectorizer_searchNL = CountVectorizer(analyzer="word", 
+        max_features = max_features_search, 
+        stop_words=stopwords2, ngram_range=(1,3))
+    X_searchNL = vectorizer_searchNL.fit_transform(df.loc[index, 
+        "search_query"]).toarray()
+    wc1, wf1 = count_words(vectorizer_searchNL, X_searchNL)
+
+    vectorizer_searchNNL = CountVectorizer(analyzer="word", 
+        max_features = max_features_search, 
+        stop_words=stopwords2, ngram_range=(1,3))
+    X_searchNNL = vectorizer_searchNNL.fit_transform(df.loc[index2, 
+        "search_query"]).toarray()
+    wc2, wf2 = count_words(vectorizer_searchNNL, X_searchNNL)
+    plot_words(wf1.index[1:n_features_to_graph], wf1[1:n_features_to_graph], 
+        title="Word Frequency-Search-New Leads", 
+        path = "../img/WordFreqSearchNL.jpg")
+    plot_words(wf2.index[1:n_features_to_graph], wf2[1:n_features_to_graph], 
+        title="Word Frequency-Search-Non Leads", 
+        path = "../img/WordFreqSearchNNL.jpg")
+    
+    
+    
+
     string = '''
     Get Dominant Features for base URL Data Frame.
     First set Vectorizer
@@ -204,14 +254,52 @@ if __name__ == "__main__":
     then set DF
     '''
     print(string)
-    vectorizer_base = CountVectorizer(analyzer="word", max_features= max_features_extended,
+    vectorizer_base = CountVectorizer(analyzer="word", 
+        max_features= max_features_base,
         stop_words=stopwords2, ngram_range=(1,1))
     X_base = vectorizer_base.fit_transform(url1Data["base_url"]).toarray()
     wcbase, wfbase = count_words(vectorizer_base, X_base)
-    df_base = pd.DataFrame(data=X_base, columns=vectorizer_base.get_feature_names())
-    df = pd.concat([df, df_base.loc[:,wfbase[:10].index]], axis=1)
+   
+    wcindex= np.sum(wcbase > 150)
+
+    df_base = pd.DataFrame(data=X_base, 
+        columns=vectorizer_base.get_feature_names())
+    df = pd.concat([df, df_base.loc[:,wcbase[:wcindex].index]], axis=1)
     print(df)
     print(df.info())
 
+    string = '''
+    Get Dominant Freatures for search_query DataFrame
+    First set Vectoriser
+    Then Set BOW
+    The Count_words()
+    then set DF
+    '''
+    print(string)
+
+    vectorizer_search = CountVectorizer(analyzer="word", 
+        max_features= max_features_search,
+        stop_words=stopwords2, ngram_range=(1,3))
+    X_search  = vectorizer_search.fit_transform(df["search_query"]).toarray()
+    wcsearch, wfsearch = count_words(vectorizer_search, X_search)
+    wcindex = np.sum(wcsearch > 150)
+    #print(wcsearch[:50])
+
+    # Add an underscore to keep columns seperate
+    columns = wcsearch.index
+    columns = [_ + "_" for _ in columns]
+    wcsearch.index = columns
+    features = vectorizer_search.get_feature_names()
+    features = [_+"_" for _ in features]
+    #print(features)
+    df_search = pd.DataFrame(data=X_search, 
+        columns=features)
+    df = pd.concat([df, df_search.loc[:,wcsearch[:wcindex].index]], axis=1)
+
+    df.drop(columns=["Referral", "Page", "Last URL", "search_query"], inplace=True)
     
-    
+    print(df.info())
+
+    df.to_csv("../data/cleaned2.csv", compression="gzip")
+
+
