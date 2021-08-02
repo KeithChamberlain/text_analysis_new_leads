@@ -29,7 +29,27 @@ def count_words(vectorizer, corpus):
     wc.sort_values(ascending=False, inplace=True)
     return wc, wc2 
 
-def plot_words(keys, values, title="Word Frequency", path="./img/WordFreq_.jpg"):
+def plot_bar_two_cat(category1, category2, ranger=30, title = None, path = "../img/WordFreq_.jpg", columns=[]):
+    categories = pd.concat([category1.sort_index(), category2.sort_index()], axis=1)
+    categories.columns = columns
+    width=0.35
+    categories.sort_values(by = columns[0], ascending=False, inplace=True)
+    
+    fig, ax = plt.subplots(figsize=(16,5))
+    ax.bar(x=np.array(range(ranger))-width/2, height=categories.iloc[:ranger,0], width=0.35, label="New Lead")
+    ax.bar(x=np.array(range(ranger))+width/2, height=categories.iloc[:ranger,1], width=0.35, label= "Not Lead")
+    plt.xticks(range(ranger), categories[:ranger].index, rotation=90)
+    ax.set_title(title, fontsize=30)
+    ax.set_ylabel("Rel. Freq.", fontsize=20)
+    ax.set_xlabel("Words", fontsize=20)
+    plt.legend()
+    fig.savefig(path)
+    plt.show()
+    return categories, fig, ax
+
+
+
+def plot_words(keys, values, title="Word Frequency", path="./img/WordFreq_.jpg", ylim = None):
     '''
     plot_words takes the names and values from a words/count Series, a custom title,
     a custom path, and plots the word frequencies, saving the image.
@@ -47,6 +67,7 @@ def plot_words(keys, values, title="Word Frequency", path="./img/WordFreq_.jpg")
     ax.set_title(title, fontsize=30)
     ax.set_xlabel('Words', fontsize=20)
     ax.set_ylabel('Rel. Freq.', fontsize=20)
+    ax.set_ylim(ylim)
     fig.savefig(path)
     plt.show()
     return fig, ax
@@ -165,10 +186,17 @@ if __name__ == "__main__":
     wc2, wf2 = count_words(vectorizer_extendedNNL, X_extendedNNL)
     plot_words(wf1.index[:n_features_to_graph], wf1[:n_features_to_graph], 
         title="Word Frequency-Landing Page-Extended URL-New Leads", 
-        path = "../img/WordFreqLPExtURLNL.jpg")
+        path = "../img/WordFreqLPExtURLNL.jpg",
+        ylim=(0,6))
     plot_words(wf2.index[:n_features_to_graph], wf2[:n_features_to_graph], 
         title="Word Frequency-Landing Page-Extended URL-Non Leads", 
-        path = "../img/WordFreqLPExtURLNNL.jpg")
+        path = "../img/WordFreqLPExtURLNNL.jpg",
+        ylim=(0,6))
+
+    plot_bar_two_cat(category1=wf1, category2=wf2, ranger=30, 
+        title="Word Frequency-Landing Page-Extended URL", 
+        path="../img/WordFreqExtURL_.jpg", columns = ["NewLead","NonLead"])
+    
 
     string = '''
     Get Dominant Features for Data Frame.
@@ -212,12 +240,18 @@ if __name__ == "__main__":
     
     plot_words(wf1.index[:n_features_to_graph], wf1[:n_features_to_graph], 
         title="Word Frequency-Landing Page-Base URL-New Leads", 
-        path = "../img/WordFreqLPBaeURLNL.jpg")
+        path = "../img/WordFreqLPBaeURLNL.jpg",
+        ylim=(0,18))
     plot_words(wf2.index[:n_features_to_graph], wf2[:n_features_to_graph], 
         title="Word Frequency-Landing Page-Base URL-Non Leads", 
-        path = "../img/WordFreqLPBaseURLNNL.jpg")
+        path = "../img/WordFreqLPBaseURLNNL.jpg",
+        ylim=(0,18))
     
-    
+    plot_bar_two_cat(category1=wf1, category2=wf2, ranger=30, 
+        title="Word Frequency-Landing Page-Base URL", 
+        path="../img/WordFreqBaseURL_.jpg", columns = ["NewLead","NonLead"])
+
+
     string = '''
     Get BOW & Word Counts (wc) for 
     Search String
@@ -238,11 +272,17 @@ if __name__ == "__main__":
     wc2, wf2 = count_words(vectorizer_searchNNL, X_searchNNL)
     plot_words(wf1.index[1:n_features_to_graph], wf1[1:n_features_to_graph], 
         title="Word Frequency-Search-New Leads", 
-        path = "../img/WordFreqSearchNL.jpg")
+        path = "../img/WordFreqSearchNL.jpg",
+        ylim=(0,6))
     plot_words(wf2.index[1:n_features_to_graph], wf2[1:n_features_to_graph], 
         title="Word Frequency-Search-Non Leads", 
-        path = "../img/WordFreqSearchNNL.jpg")
+        path = "../img/WordFreqSearchNNL.jpg",
+        ylim=(0,6))
     
+    
+    plot_bar_two_cat(category1=wf1, category2=wf2, ranger=30, 
+        title="Word Frequency-Search String", 
+        path="../img/WordFreqSearch_.jpg", columns = ["NewLead","NonLead"])
     
     
 
@@ -300,6 +340,6 @@ if __name__ == "__main__":
     
     print(df.info())
 
-    df.to_csv("../data/cleaned2.csv", compression="gzip")
+    df.to_csv("../data/cleaned2.csv", compression="gzip", index=False)
 
 
