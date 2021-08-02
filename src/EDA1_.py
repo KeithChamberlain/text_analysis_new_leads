@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
 import makedv as md
-from statsmodels.discrete import discrete_model as smd
 import seaborn as sns
-from sklearn import linear_model
 from boot_ import boot_ci, boot_ci2
 
 
@@ -168,25 +166,18 @@ def plot_pct_bar4(ax, pct, title=None, xlab=None, ylab = None, path=None, xtickl
     return ax
 
 if __name__ == "__main__":
-    df=pd.read_csv("../data/Cleaned1.csv", compression="gzip", 
+    rng = Generator(PCG64(seed=None))
+
+    df=pd.read_csv("../data/Cleaned2.csv", compression="gzip", 
         low_memory=False)
 
     print(df.info())
 
     df['dt'] = pd.to_datetime(df['dt'], errors="coerce", 
         infer_datetime_format=True)
-   
-    # X = df['Is2020'].to_numpy().reshape(-1,1)
-    # y = df['New_Lead'].replace(to_replace=["NotNewLead","NewLead"], value=[0,1])
-    # print(y)
-    # model_logit_Full = linear_model.LogisticRegression(class_weight="balanced")
-    # model_logit_Full.fit(X=X, y=y)
-    # pred = model_logit_Full.predict(X)
-    # res = y - pred
-    # plt.plot(res)
-    # plt.show()
 
-    df["Day"] = df.Day.astype("category")
+
+    df["day"] = df.day.astype("category")
     df["Direction"] = df.Direction.astype("category")
 
     print("\n\n")
@@ -221,24 +212,24 @@ if __name__ == "__main__":
     index = df.loc[:,"New_Lead"] == "NewLead"
     df["new"] = df.loc[index,"New_Lead"]
 
-    vcd = df.value_counts(["Day","new"], sort = False)
+    vcd = df.value_counts(["day","new"], sort = False)
 
     print(vcd)
     print(vcd.mean())
     ax = vcd.plot(kind="line", xlabel = None, figsize=(16,5), linewidth=7)
     ax.set_ylim(0, 8000)
     result_pct = vcd/vcd.sum()*100
-    ax_pct = plot_pct_bar(ax, round(result_pct,1), title="New Lead by Day of Week", 
-        xlab="New Lead Only & Day of Week",
-        ylab = "Counts", path = "../img/DayNewLeadLine_.jpg")
+    ax_pct = plot_pct_bar(ax, round(result_pct,1), title="New Lead by day of Week", 
+        xlab="New Lead Only & day of Week",
+        ylab = "Counts", path = "../img/dayNewLeadLine_.jpg")
     
     print(vcd.mean())
     ax = vcd.plot(kind="bar", xlabel = None, figsize=(16,5))
     ax.set_ylim(0, 8000)
     result_pct = vcd/vcd.sum()*100
-    ax_pct = plot_pct_bar(ax, round(result_pct,1), title="New Lead by Day of Week", 
-        xlab="New Lead Only & Day of Week",
-        ylab = "Counts", path = "../img/DayNewLeadbar_.jpg")
+    ax_pct = plot_pct_bar(ax, round(result_pct,1), title="New Lead by day of Week", 
+        xlab="New Lead Only & day of Week",
+        ylab = "Counts", path = "../img/dayNewLeadbar_.jpg")
     
     
     print("\n\n\n\n\n")
@@ -347,61 +338,77 @@ if __name__ == "__main__":
 
 
 
-    gpmn = df[["New_Lead", "dur_min"]].groupby(by="New_Lead").aggregate([np.mean, np.std, np.count_nonzero])
-    print(gpmn)
-    threshold = 40
-    mask = gpmn["dur_min"]["count_nonzero"] > 40
-    gpmnm = gpmn.loc[mask,:]
-    print(gpmn)
-    print(gpmnm)
-    yerr=gpmnm["dur_min"]["std"]
-    ax = gpmnm["dur_min"]["mean"].plot(kind="bar", yerr=yerr, figsize=(16,5))
-    ax.set_title("New Lead by Call Duration", fontsize=35)
-    ax.set_xlabel("New Lead & Mean Call Duration", fontsize=25)
-    ax.set_ylabel("Time (min)", fontsize=25)
-    xt = ax.get_xticklabels()
-    ax.set_xticklabels(xt, rotation=45, horizontalalignment="right")
-    fig = plt.gcf()
-    fig.savefig("../img/DurationLeadBarError_.jpg", dpi=400)
-    plt.show()
+    # gpmn = df[["New_Lead", "dur_min"]].groupby(by="New_Lead").aggregate([np.mean, np.std, np.count_nonzero])
+    # print(gpmn)
+    # threshold = 40
+    # mask = gpmn["dur_min"]["count_nonzero"] > 40
+    # gpmnm = gpmn.loc[mask,:]
+    # print(gpmn)
+    # print(gpmnm)
+    # yerr=gpmnm["dur_min"]["std"]
+    # ax = gpmnm["dur_min"]["mean"].plot(kind="bar", yerr=yerr, figsize=(16,5))
+    # ax.set_title("New Lead by Call Duration", fontsize=35)
+    # ax.set_xlabel("New Lead & Mean Call Duration", fontsize=25)
+    # ax.set_ylabel("Time (min)", fontsize=25)
+    # xt = ax.get_xticklabels()
+    # ax.set_xticklabels(xt, rotation=45, horizontalalignment="right")
+    # fig = plt.gcf()
+    # fig.savefig("../img/DurationLeadBarError_.jpg", dpi=400)
+    # plt.show()
 
 
-    gpmn2 = df[["dur_min", "New_Lead"]].groupby(by="New_Lead").aggregate([np.mean, np.std,  np.count_nonzero ])
-    threshold = 40
-    mask = gpmn2["dur_min"]["count_nonzero"] > 40
-    gpmn2m = gpmn2.loc[mask,:]
-    print(gpmn2)
-    print(gpmn2m)
-    yerr=gpmn2m["dur_min"]["std"]
-    ax = gpmn2m["dur_min"]["mean"].plot(kind="bar", yerr=yerr, figsize=(16,5))
-    ax.set_title("New Leads by Call Duration", fontsize=35)
-    ax.set_xlabel("New Leads & Mean Call Duration", fontsize=25)
-    ax.set_ylabel("Time (min)", fontsize=25)
-    xt = ax.get_xticklabels()
-    ax.set_xticklabels(xt, rotation=45, horizontalalignment="right")
-    plt.savefig("../img/DurationLeadsBarError_.jpg")
-    plt.show()
+    # gpmn2 = df[["dur_min", "New_Lead"]].groupby(by="New_Lead").aggregate([np.mean, np.std,  np.count_nonzero ])
+    # threshold = 40
+    # mask = gpmn2["dur_min"]["count_nonzero"] > 40
+    # gpmn2m = gpmn2.loc[mask,:]
+    # print(gpmn2)
+    # print(gpmn2m)
+    # yerr=gpmn2m["dur_min"]["std"]
+    # ax = gpmn2m["dur_min"]["mean"].plot(kind="bar", yerr=yerr, figsize=(16,5))
+    # ax.set_title("New Leads by Call Duration", fontsize=35)
+    # ax.set_xlabel("New Leads & Mean Call Duration", fontsize=25)
+    # ax.set_ylabel("Time (min)", fontsize=25)
+    # xt = ax.get_xticklabels()
+    # ax.set_xticklabels(xt, rotation=45, horizontalalignment="right")
+    # plt.savefig("../img/DurationLeadsBarError_.jpg")
+    # plt.show()
     
-    def get_cmap(n, name='hsv'):
-        '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct 
-        RGB color; the keyword argument name must be a standard mpl colormap name.'''
-        return plt.cm.get_cmap(name, n)
+    # def get_cmap(n, name='hsv'):
+    #     '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct 
+    #     RGB color; the keyword argument name must be a standard mpl colormap name.'''
+    #     return plt.cm.get_cmap(name, n)
 
-    ax = sns.catplot(x=df["New_Lead"], y=df["Likelihood"], data=df, 
-        estimator=np.median, kind="box", )
-    #ax.set_title("Boxplot: Likelihood by New Lead", fontsize=35)
-    fig = plt.gcf()
-    fig.savefig("../img/LikelihoodNewLeadboxplot_.jpg")
-    plt.show()
+    # ax = sns.catplot(x=df["New_Lead"], y=df["Likelihood"], data=df, 
+    #     estimator=np.median, kind="box", )
+    # #ax.set_title("Boxplot: Likelihood by New Lead", fontsize=35)
+    # fig = plt.gcf()
+    # fig.savefig("../img/LikelihoodNewLeadboxplot_.jpg")
+    # plt.show()
 
     fig, ax = plt.subplots(figsize=(16,5))
     for year in range(2016, 2022):
-        color = list(np.random.choice(range(256), size=3))
+        color = list(rng.choice(range(256), size=3))
         ax.plot(df[["dt_year","new3","dt_month"]].loc[df["dt_year"]==year, ["new3","dt_month"]].groupby(by="dt_month").count(), 
             label=year, linewidth=7)
-    ax.set_title("Annual Seasonality in New Leads Across All Clients", fontsize=35)
+    ax.set_title("New Leads Annually Across All Clients", fontsize=35)
     ax.set_xlabel("Month", fontsize=25)
     ax.set_ylabel("Count of New Leads", fontsize=25)
     plt.legend()
     fig.savefig("../img/YearOverYearLine_.jpg")
     plt.show()
+
+    fig, ax = plt.subplots(figsize=(16,5))
+    for year in range(2014, 2020):
+        color = list(rng.choice(range(256), size=3))
+        ax.plot(df[["dt_year","new3","dt_month"]].loc[df["dt_year"]==year,
+            ["new3","dt_month"]].groupby(by="dt_month").count(),
+            label=year, linewidth=7)
+    ax.set_title("New Leads Annually Across All Clients", fontsize=35)
+    ax.set_xlabel("Month", fontsize=25)
+    ax.set_ylabel("Count of New Leads", fontsize=25)
+    ax.set_xlim(0,13)
+    plt.legend()
+    fig.savefig("../img/YearOverYearLine2_.jpg")
+    plt.show()
+
+    
