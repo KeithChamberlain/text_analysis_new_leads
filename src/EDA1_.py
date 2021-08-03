@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
 import makedv as md
-import seaborn as sns
 from boot_ import boot_ci, boot_ci2
 
 

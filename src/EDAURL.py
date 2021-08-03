@@ -285,6 +285,9 @@ if __name__ == "__main__":
         path="../img/WordFreqSearch_.jpg", columns = ["NewLead","NonLead"])
     
     
+    sring = '''
+    Stratify based on 
+    '''
 
     string = '''
     Get Dominant Features for base URL Data Frame.
@@ -340,6 +343,11 @@ if __name__ == "__main__":
     
     print(df.info())
 
-    df.to_csv("../data/cleaned2.csv", compression="gzip", index=False)
+    
+
+
+
+
+    #df.to_csv("../data/cleaned2.csv", compression="gzip", index=False)
 
 
