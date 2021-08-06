@@ -183,24 +183,18 @@ class FitDistrib():
 
 
 if __name__ == "__main__":
+    save = True
     '''
     Interpolate Likelihood Missing Values by sampling
     from beta distribution (default).
     '''
-    df = pd.read_csv("../data/cleaned1.csv", compression="gzip", low_memory=False)
-    filled = FitDistrib(df["Likelihood"].copy(), bootstrap=False)
+
+    df = pd.read_csv("../data/data.csv", compression="gzip", low_memory=False)
+    filled = FitDistrib(df["Likelihood"].copy(), bootstrap=True)
     df["Likelihood_fill"] = filled.get_data()
     print(df.info())
     filled.plot_dists(df["Likelihood_fill"], df["Likelihood"])
-    
-    '''
-    Interpolate Hang_Voice Missing Values by sampling from 
-    binomial distribution with probabilities set to match class
-    ratios.
-    '''
-    vc = df["Hang_Voice"].value_counts()
-    vcf = vc/vc.sum()
-    print(vc)
-    print(vcf)
+    if save:
+        df.to_csv("../data/data.csv", index=False, sep=",", compression="gzip")
     
 

@@ -1,6 +1,5 @@
 
 import numpy as np
-from numpy.core.numeric import correlate
 import pandas as pd
 import re
 
@@ -45,7 +44,8 @@ class Clean:
 
     def read_csv(self):
         from pandas import read_csv
-        self.df = read_csv(self.path, sep=self.sep, dtype=self.type_dict, compression=self.compression, low_memory=False)
+        self.df = read_csv(self.path, sep=self.sep, dtype=self.type_dict, 
+            compression=self.compression, low_memory=False)
         self.keep()
         self.rename()
         self.make_var()
@@ -169,17 +169,6 @@ if __name__ == "__main__":
     print(cln.get_df().info())
 
     df = cln.get_df()
+
     if save:
         df.to_csv("../data/data.csv", index=False, sep=",", compression="gzip")
-    
-    df2 = pd.read_csv("../data/cleaned1.csv", sep=",", compression="gzip", low_memory=False)
-
-    df3 = pd.get_dummies(data=df['New_Lead'], prefix="nl", columns=["New_Lead"], drop_first=False)
-    df4 = pd.get_dummies(data=df2['New_Lead'], prefix="nl2", columns=["New_Lead"], drop_first=False)
-    print(df3.info())
-    print(df4.info())
-
-    print(np.corrcoef(df3["nl_NewLead"], df4["nl2_NewLead"], rowvar=False))
-    print(np.corrcoef(df3["nl_NotNew"], df4["nl2_NotNewLead"], rowvar=False))
-    print((df3["nl_NewLead"] == df4["nl2_NewLead"]).sum()+(df3["nl_NotNew"]==df4["nl2_NotNewLead"]).sum())
-    print(df.shape, df2.shape)
