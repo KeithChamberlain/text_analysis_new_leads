@@ -93,6 +93,7 @@ class Clean:
         self.df["Day of Week"] = self.df["dt"].dt.dayofweek
         self.df["Day of Month"] = self.df["dt"].dt.day
         self.df["Year"] = self.df["dt"].dt.year
+        self.df["Hour"] = self.df["dt"].dt.hour
         return "Done"
 
     def not_time(self, column, new_name):
