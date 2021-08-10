@@ -38,9 +38,23 @@ An examination of the three plots that show word frequencies for New Leads split
 
 ## Model Results
 
->Models can be judged by several scoring metrics, such as accuracy, root-mean-squared-error (RMSE), area under the ROC curve (AUC), recall and precision among others. There are pros and cons to each metric, and data scientists must carefully weigh the consequences of choosing a metric. F1 was chosen here as it balances the influence of precision and recall, where both precision and recall are good choices for unbalanced data. However, no a-priori preference could be drawn to prefer precision over recall, or visa-versa, so their harmonic mean, or the F1 score, was chosen. The table below summarizes the model performance according to the F1 scores. 
+>Models can be judged by several scoring metrics, such as accuracy, root-mean-squared-error (RMSE), area under the ROC curve (AUC), recall and precision among others. There are pros and cons to each metric, and data scientists must carefully weigh the consequences of choosing a metric. F1 was chosen here as it balances the influence of precision and recall, where both precision and recall are good choices for unbalanced data. However, no a-priori preference could be drawn to prefer precision over recall, or visa-versa, so their harmonic mean, or the F1 score, was chosen. The table below summarizes the model performance according to the F1 scores.
+
+<p align="center">
+<img src="img/Models.jpg" width="600" height="300" />
+</p>
 
 In each case, Random Forest had the best mean cross validated F1 score and was chosen for further fitting. The Dummy Classifier in all versions was well behind the Random Forest model, indicating model performance gains over the base model. We can see that the NLP featured model improved upon the seasonality model by almost 8%. Their combined model improved the F1 score by a further ~7%. On the testing set, the predictions from the Random Forest Classifier performed comparable to the set from which it was trained.
+
+### ROC Analysis
+
+>For a traditional analysis, condiser the ROC curve, displayed below. The curves bowed farther to the left are better models. Notice that the combined model out performs the other two models. 
+
+<p align="center">
+<img src="img/ROC.jpg" width="300" height="300" />
+</p>
+
+The ROC curve may be a more traditional display of model performance that other data scientists may be used to other than the F1 scores, so is presented accordingly. I have found that the Pecision Recall Curve isn't as visually appealing as the ROC curve so tend to avoid it.
 
 ## Feature Importance
 
@@ -67,3 +81,6 @@ No values from the search string demonstrated as important factors. Investigatio
 
 Future work may include finding ways to move google paid further to the right on impact on model output.
 
+References
+
+Lundberg, S.M., Erion, G., Chen, H. et al. From local explanations to global understanding with explainable AI for trees. Nat Mach Intell 2, 56–67 (2020). https://doi.org/10.1038/s42256-019-0138-9
