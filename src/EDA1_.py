@@ -169,12 +169,24 @@ if __name__ == "__main__":
 
     df=pd.read_csv("../data/Cleaned2.csv", compression="gzip", 
         low_memory=False)
+    # dtype_dict = {"Tracking Source": "category", "Search Query":str, "Referral": str, "Page": str,
+    #     "Last URL":str, "Likelihood":float, "Direction":"category","combine":str, "New_Lead":bin, 
+    #     "Hang_Msg":bin, "dur_min":float,"dt":str,"Month":str, "Day of Week": str, "Day of Month": str}
+    # df = pd.read_csv("../data/data.csv", compression="gzip", sep=",", low_memory=False)
 
     print(df.info())
+    string = '''
+    \t SET DateTime Vairable
+    '''
+    print(string)
 
     df['dt'] = pd.to_datetime(df['dt'], errors="coerce", 
         infer_datetime_format=True)
-
+    # Set 
+    # df["Day of Month"] = df["dt"].dt.day
+    # df["Day of Week"] = df["dt"].dt.dayofweek
+    # df["Year"] = df['dt'].dt.year
+    # df["Month"] = df['dt'].dt.month
 
     df["day"] = df.day.astype("category")
     df["Direction"] = df.Direction.astype("category")
@@ -191,18 +203,26 @@ if __name__ == "__main__":
     print("\n\n\n\n\n")
 
 
-    print("\n\n\n\n\n")
-    string = '''
-    \tUNIVARIATE ANALYSES
-    '''
 
+    string = '''
+    \t PLOT: Lead Type By Direction
+    '''
+    print(string)
 
     print(df["Direction"].value_counts())
     bar_ = pd.DataFrame({"x":df['Direction'].cat.categories, 
         "height":df["Direction"].value_counts(sort = False)})
     bar_ = bar_.sort_values(by = "height", ascending=False)
     bar_["percentage"] = np.round(bar_["height"]/bar_['height'].sum()*100, 1)
+    print("\n\n\n\n\n")
+
     
+    
+    string = '''
+    \t PLOT: COMMUNICATION DIRECTION by itself
+    '''
+    print(string)
+
     md.plot_bar(x=bar_["x"], height=bar_["height"], percents=bar_["percentage"], 
         title = "Communication Direction by Itself", 
         xlab = "Communication Type/Direction",
@@ -210,9 +230,17 @@ if __name__ == "__main__":
     print("\n\n\n\n\n")
     index = df.loc[:,"New_Lead"] == "NewLead"
     df["new"] = df.loc[index,"New_Lead"]
+    print("\n\n\n\n\n")
 
+
+
+
+    string = '''
+    \t PLOT: NEW LEADS by DAY OF WEEK (Line plot)
+    '''
+    print(string)
+    # Grouping variable
     vcd = df.value_counts(["day","new"], sort = False)
-
     print(vcd)
     print(vcd.mean())
     ax = vcd.plot(kind="line", xlabel = None, figsize=(16,5), linewidth=7)
@@ -222,6 +250,10 @@ if __name__ == "__main__":
         xlab="New Lead Only & day of Week",
         ylab = "Counts", path = "../img/dayNewLeadLine_.jpg")
     
+    string = '''
+    \t PLOT: NEW LEADS by DAY OF WEEK (Bar Plot)
+    '''
+    print(string)
     print(vcd.mean())
     ax = vcd.plot(kind="bar", xlabel = None, figsize=(16,5))
     ax.set_ylim(0, 8000)
@@ -229,9 +261,12 @@ if __name__ == "__main__":
     ax_pct = plot_pct_bar(ax, round(result_pct,1), title="New Lead by day of Week", 
         xlab="New Lead Only & day of Week",
         ylab = "Counts", path = "../img/dayNewLeadbar_.jpg")
-    
-    
     print("\n\n\n\n\n")
+
+    string = '''
+    \t PLOT: New Leads by DIRECTION
+    '''
+    print(string)
 
     index = md.get_search(df.loc[:,"New_Lead"], "NewLead")
     index = pd.Series(index)
@@ -247,24 +282,46 @@ if __name__ == "__main__":
 
 
 
-
+    # Set some grouping variables
     df['dt_dow']=df['dt'].dt.dayofweek
     df['dt_year']=df['dt'].dt.year
     df['dt_month']=df['dt'].dt.month
     df['dt_hour']=df['dt'].dt.hour
     df['dt_day']=df['dt'].dt.day
     df['dt_week']=df['dt'].dt.isocalendar().week
-    for year in range(2012, 2021):
-        df[year]=df['dt'].dt.year==year
-   
+    
+
+    string = '''
+    \t PLOT: NEW LEADS by Day of Month
+    '''
+    index = df["Year"].isin([2016,2017,2018,2019])
+    index2 = df["Year"].isin([2020,2021])
+    dt_dom = df.loc[index, [ "Day of Month", "new3"]].groupby(by=["Day of Month"]).count()
+    dt_dom2 = df.loc[index2, ["Day of Month", "new3"]].groupby(by=["Day of Month"]).count()
+    fig, ax = plt.subplots(figsize=(16,5))
+    ax.plot(np.array(dt_dom.index), dt_dom["new3"], linewidth=7, label = "2016-2019", 
+        alpha=0.6)
+    ax.plot(np.array(dt_dom2.index), dt_dom2["new3"], linewidth=7, label = "2020-2021",
+        alpha=0.6)
+    ax.set_xlabel("New Leads & Day of Month Seasonality", fontsize=25)
+    ax.set_ylabel("Counts", fontsize=25)
+    ax.set_title("New Leads by Day of Month", fontsize=35)
+    ax.set_ylim(0,3000)
+    fig = plt.gcf()
+    plt.legend()
+    fig.savefig("../img/AnnualDOMSeasonLeadLine_.jpg")
+    plt.show()
+    
+
     string='''
     The forgotten variable... Week of Month
     '''
 
-
+    string = '''
+    '''
     print(string)
     dt_week = df[["dt_week", "new3"]].groupby(by=["dt_week"]).count()
-
+    
     dt_week.sort_index(inplace=True)
     ax = dt_week.plot(kind="line", xlabel=None, figsize=(16,5), legend=None, linewidth=7)
     ax.set_xlabel("New Leads & Weekly Seasonality", fontsize=25)
@@ -387,8 +444,9 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(figsize=(16,5))
     for year in range(2016, 2022):
         color = list(rng.choice(range(256), size=3))
-        ax.plot(df[["dt_year","new3","dt_month"]].loc[df["dt_year"]==year, ["new3","dt_month"]].groupby(by="dt_month").count(), 
-            label=year, linewidth=7)
+        ax.plot(df[["dt_year","new3","dt_month"]].loc[df["dt_year"]==year, 
+            ["new3","dt_month"]].groupby(by="dt_month").count(), 
+            label=year, linewidth=7, alpha=0.5)
     ax.set_title("New Leads Annually Across All Clients", fontsize=35)
     ax.set_xlabel("Month", fontsize=25)
     ax.set_ylabel("Count of New Leads", fontsize=25)
@@ -396,12 +454,24 @@ if __name__ == "__main__":
     fig.savefig("../img/YearOverYearLine_.jpg")
     plt.show()
 
+
+
+    lst = list()
+    for year in range(2016, 2020):
+        lst.append(df[["dt_year","new3","dt_month"]].loc[df["dt_year"]==year,
+            ["new3","dt_month"]].groupby(by="dt_month").count())
+    print(lst)
+    series = np.array(lst).reshape(4,12)
+    mean_series = series.mean(axis=0)
+
     fig, ax = plt.subplots(figsize=(16,5))
-    for year in range(2014, 2020):
+    for year in range(2016, 2020):
         color = list(rng.choice(range(256), size=3))
         ax.plot(df[["dt_year","new3","dt_month"]].loc[df["dt_year"]==year,
             ["new3","dt_month"]].groupby(by="dt_month").count(),
-            label=year, linewidth=7)
+            label=year, linewidth=7, alpha=0.6)
+    ax.plot(range(1,13), mean_series, label = "mean", color="black", linewidth=7,
+        alpha=0.6)
     ax.set_title("New Leads Annually Across All Clients", fontsize=35)
     ax.set_xlabel("Month", fontsize=25)
     ax.set_ylabel("Count of New Leads", fontsize=25)
@@ -410,4 +480,3 @@ if __name__ == "__main__":
     fig.savefig("../img/YearOverYearLine2_.jpg")
     plt.show()
 
-    

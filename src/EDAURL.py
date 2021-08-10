@@ -5,7 +5,6 @@ from matplotlib import rcParams
 import re
 rcParams.update({'figure.autolayout': True})
 from MineURL import ManyURL
-#from makedv import get_search
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.corpus import stopwords
 from sklearn.decomposition import NMF
@@ -18,7 +17,7 @@ def randomize_names(df):
     for column in colnames:
         arr = ""
         for _ in range(10):
-            arr.join(np.random.choice(["0","1","2","3","4","5","6","7","8","9",
+            arr += arr.join(np.random.choice(["0","1","2","3","4","5","6","7","8","9",
                                        "a","b","c","d","e","f","g","h","i","j"], size=1))
         i += 1
         newnames.append(arr)
@@ -172,7 +171,7 @@ if __name__ == "__main__":
     df["search_query"] = df["Search Query"]
     df["tracking_source"] = df["Tracking Source"]
     print(df.info())
-    df.drop(columns=["Likelihood","Search Query", "Tracking Source"],
+    df.drop(columns=["Search Query", "Tracking Source"],
         inplace=True)
 
     # Fill NAs
@@ -196,8 +195,8 @@ if __name__ == "__main__":
     print(url1Data.info())
     print("Unique Base URLs", len(url1Data["base_url"].unique()))
     uurl = pd.Series(url1Data["base_url"].unique())
-    index = get_search(uurl, search_string="google|Google")
-    print(np.sum(index))
+    usurl = pd.Series(url1Data["search_string"].notna().count())
+    print(usurl)
 
     string = '''
     Get Bag Of Words & Word Counts (wc)
@@ -357,10 +356,10 @@ if __name__ == "__main__":
         columns=features)
     df = pd.concat([df, df_search.loc[:,wcsearch[:wcindex].index]], axis=1)
     df2 = pd.concat([df2, df_search.loc[:,wcsearch[:wcindex].index]], axis=1)
-    df.drop(columns=["Referral", "Page", "Last URL", "search_query"], inplace=True)
     
-    print(df.info())
-
+    # Check the names
+    for name in df2.columns:
+        print(name)
 
     df.to_csv(output_confidential, compression="gzip", index=False)
     df2.to_csv(output_protected, compression="gzip", index=False)

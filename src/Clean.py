@@ -87,8 +87,10 @@ class Clean:
         return self.df
     
     def to_time(self, columns):
-        self.df['dt'] = pd.to_datetime(df[columns[0]] + " " + df[columns[1]], 
+        strstamp = self.df[columns[0]] + " " + self.df[columns[1]]
+        dt = pd.to_datetime(strstamp, errors="coerce", 
             infer_datetime_format=True)
+        self.df['dt'] = dt
         self.df["Month"] = self.df["dt"].dt.month
         self.df["Day of Week"] = self.df["dt"].dt.dayofweek
         self.df["Day of Month"] = self.df["dt"].dt.day
@@ -135,8 +137,6 @@ if __name__ == "__main__":
         "DF04":str}
     unnamed = ["DF01", "DF02", "DF03", "DF04"]
 
-    #print(df[columns].info())
-
 
     eng_dict = {"combine":[10,14], "string":["New_Lead","combine", "new","NewLead","NotNew"]}
 
@@ -151,9 +151,6 @@ if __name__ == "__main__":
 
     cln.make_var()
 
-    print(cln.get_df()["Tracking Source"].value_counts())
-    print(cln.get_df()["Direction"].value_counts())
-
     cln.get_df()["Tracking Source"].replace(to_replace=["Google AdWords","Google Ads", 
         "Google Paid","Google Adwords"], value="Google Paid", inplace=True)
     cln.get_df()["Direction"].replace(to_replace=["outbound"], value=np.nan, inplace=True)
@@ -165,7 +162,7 @@ if __name__ == "__main__":
     # Value Counts Add Up
     print(cln.get_df()["New_Lead"].value_counts())
     print(cln.get_df()["Tracking Source"].value_counts())
-
+    print(cln.get_df().info())
     cln.df.drop(columns=["DF01","DF02","DF03","DF04", "Duration","Date","Time"], inplace=True)
     print(cln.get_df().info())
 
@@ -173,3 +170,4 @@ if __name__ == "__main__":
 
     if save:
         df.to_csv("../data/data.csv", index=False, sep=",", compression="gzip")
+    
