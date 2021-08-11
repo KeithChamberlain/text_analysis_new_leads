@@ -5,6 +5,7 @@ from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
 from sklearn import linear_model
 from sklearn import metrics
+from sklearn.dummy import DummyClassifier
 from joblib import dump, load
 from sklearn.base import clone 
 from sklearn import model_selection
@@ -66,17 +67,28 @@ if __name__ == "__main__":
     modelFull = load("../data/best_model_08_08_full_conf.gz")
 
     print("Data Imported")
+    print("\n\n\n\n\n")
     
+    
+    string = '''
+    Get Baseline Model
+    '''
+    print(string)
+    model_baseline = DummyClassifier(strategy="stratified", constant=True)
+    model_baseline.fit(X_test_confid_full, y_test_confid)
+
     string = '''
     Get ROC Curve
     ''' 
     print(string)
+    roc_display = metrics.plot_roc_curve(model_baseline, X_test_confid_full, y_test_confid, 
+        name="DummyClassifier; Stratified")
     roc_display = metrics.plot_roc_curve(model, X_test_confid_orig, y_test_confid, 
-        name = "Seasonality")
+        ax=roc_display.ax_, name = "Random Forest without NLP Features")
     roc_display = metrics.plot_roc_curve(modelPart, X_test_confid_part, y_test_confid, 
-        ax=roc_display.ax_, name = "NLP Features")
+        ax=roc_display.ax_, name = "Random Forest with NLP Features only")
     roc_display = metrics.plot_roc_curve(modelFull, X_test_confid_full, y_test_confid, 
-        ax=roc_display.ax_, name="Combined")
+        ax=roc_display.ax_, name="Random Forest Combined")
     roc_display.ax_.set_title("ROC Curve", fontsize=35)
     roc_display.ax_.set_xlabel("False Alarm Rate", fontsize=25)
     roc_display.ax_.set_ylabel("Sensitivity", fontsize=25)
@@ -89,15 +101,18 @@ if __name__ == "__main__":
     GET PR Curve
     '''
     print(string)
+    pr_display = metrics.plot_precision_recall_curve(model_baseline, X_test_confid_full, y_test_confid,
+        name="Dummy Classifier; Stratified")
     pr_display = metrics.plot_precision_recall_curve(model, X_test_confid_orig, y_test_confid, 
-        name = "Seasonality")
+        ax = pr_display.ax_, name = "Random Forest without NLP Features")
     pr_display = metrics.plot_precision_recall_curve(modelPart, X_test_confid_part, y_test_confid, 
-        ax=roc_display.ax_, name = "NLP Features")
+        ax=pr_display.ax_, name = "Random Forest with NLP Features only")
     pr_display = metrics.plot_precision_recall_curve(modelFull, X_test_confid_full, y_test_confid, 
-        ax=roc_display.ax_, name="Combined")
+        ax=pr_display.ax_, name="Random Forest Combined")
     pr_display.ax_.set_title("Precision/Recall Curve", fontsize=35)
     pr_display.ax_.set_xlabel("Recall", fontsize=25)
     pr_display.ax_.set_ylabel("Precision", fontsize=25)
+    plt.legend()
     plt.show()
     if save:
         pr_display.figure_.savefig("../img/PrecRec.jpg")
